@@ -7,7 +7,7 @@
 
 #include "HFDP.h"
 
-//#define SENDING
+#define SENDING
 
 #define MAC_OFFSET 10
 #define MAC_SIZE 6
@@ -128,7 +128,7 @@ int printDevices(char *error_buffer){
 
     if(pcap_findalldevs(&devices, error_buffer) == -1){
         printf("ERROR FINDING DEVICES: %s\n", error_buffer);
-        return 0;
+        return -1;
     }
     
     for(temp = devices; temp; temp = temp->next){

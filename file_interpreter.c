@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include "HFDP.h"
 #include "file_interpreter.h"
+#include "udp_sockets.h"
 
 void generate_headers(char *file_name, SOCKET_LIST* socket_list){
     

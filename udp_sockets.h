@@ -23,17 +23,16 @@
 //this struct holds info about given udp socket
 typedef struct{
     struct sockaddr_in servaddr, cliaddr;
-    int port, buffer_size, sockfd;
+    int port, buffer_size, sockfd, last_packet_size;
     u_int8_t* buffer;
-    SOCKET_INFO socket_info;
 }udp_socket;
 
 
 //generates udp server
-void udp_init(udp_socket* udp_info);
+int udp_init(udp_socket* udp_info);
 
 //listen for udp packets and put recieved data into buffer
-void udp_listener(udp_socket* udp_info, u_int8_t* buffer);
+void udp_listener(udp_socket* udp_info);
 
 //send buffer info by given udp port
 void udp_send(udp_socket* udp_info, int lenght);

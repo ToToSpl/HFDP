@@ -13,12 +13,12 @@
 #include <pcap.h>
  
 
-void udp_init(udp_socket* udp_info){
+int udp_init(udp_socket* udp_info){
 	
 	// Creating socket file descriptor 
 	if ( (udp_info->sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) { 
 		perror("socket creation failed"); 
-		exit(EXIT_FAILURE); 
+		return -1;
 	}
 
     udp_info->buffer = malloc(udp_info->buffer_size);
@@ -36,11 +36,12 @@ void udp_init(udp_socket* udp_info){
 			sizeof(udp_info->servaddr)) < 0 ) 
 	{ 
 		perror("bind failed"); 
-		exit(EXIT_FAILURE); 
+		return -1;
 	}
+	return 1;
 }
 
-void udp_listener(udp_socket* udp_info, u_int8_t* buffer) { 
+void udp_listener(udp_socket* udp_info) { 
 
 	int len = sizeof(udp_info->cliaddr); 
     int n = -1; 
@@ -58,6 +59,7 @@ void udp_listener(udp_socket* udp_info, u_int8_t* buffer) {
 		}
         */
 	}
+	udp_info->last_packet_size = n;
 }
 
 void udp_send(udp_socket* udp_info, int lenght){

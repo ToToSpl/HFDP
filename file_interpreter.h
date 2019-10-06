@@ -1,5 +1,3 @@
-#include <sys/types.h>
-#include "HFDP.h"
 
 
 /*
@@ -19,6 +17,10 @@
 
 #define FILE_INT
 
+#include <sys/types.h>
+#include "HFDP.h"
+#include "udp_sockets.h"
+
 
 typedef struct{
     int num_of_macs, device_id;
@@ -29,6 +31,8 @@ typedef struct{
     int socket,buffer;
     int *mac;
     char fec[10], direction[10];
+    udp_socket *udp;
+    int isCorrupted;
 }SOCKET_INFO;
 
 typedef struct{

@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"pcap.h": "c",
+			"string.h": "c",
+			"stdlib.h": "c",
+			"file_interpreter.h": "c",
+			"stdio.h": "c"
+		}
+	}
+}
