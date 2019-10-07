@@ -148,6 +148,8 @@ void callback(u_int8_t *user, const struct pcap_pkthdr *h, const u_int8_t *bytes
         if(bytes[PATTERN_OFFSET + i] != mac_ids[RX_ID][i]) return;
     }
 
+    //here goes func from rxtx
+
     printf("SIZE OF PACKET: %i\n",h->len);
 
     HFDP *container = malloc(sizeof(HFDP));
@@ -166,4 +168,7 @@ void callback(u_int8_t *user, const struct pcap_pkthdr *h, const u_int8_t *bytes
 
     for(int i = 0; i < container->size; i++) printf("%c",container->data[i]);
     printf("\n\n");
+
+    free(container->data);
+    free(container);
 }

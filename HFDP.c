@@ -44,6 +44,7 @@ void generatePacket(packet* whole_packet, u_int8_t *radiotap, u_int8_t *ieec, HF
     ptr+=RSSI_SIZE;
 
     if(container->flags & RESEND != 0x00) memcpy(ptr,&container->reMAC,REMAC_SIZE);
+    else memset(ptr, 0, REMAC_SIZE);
     ptr+=REMAC_SIZE;
 
     memcpy(ptr,&container->size,SIZE_SIZE);
