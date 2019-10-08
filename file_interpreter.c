@@ -1,9 +1,10 @@
+#include "file_interpreter.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include "HFDP.h"
-#include "file_interpreter.h"
 #include "udp_sockets.h"
 
 void generate_headers(char *file_name, SOCKET_LIST* socket_list){
@@ -29,6 +30,8 @@ void generate_headers(char *file_name, SOCKET_LIST* socket_list){
 
         nread = getline(&line, &len, fp);
 
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wformat"
         sscanf(line, "%d %s %x %x %x %x %x %x %s %d",
             &socket_list->sockets[i]->socket,
             socket_list->sockets[i]->fec,
@@ -40,6 +43,7 @@ void generate_headers(char *file_name, SOCKET_LIST* socket_list){
             &socket_list->sockets[i]->mac[5], 
             socket_list->sockets[i]->direction, 
             &socket_list->sockets[i]->buffer);
+        #pragma GCC diagnostic pop
     }
 }
 
@@ -67,8 +71,11 @@ void generate_macs(char *file_name, MAC_LIST *mac_list){
 
         nread = getline(&line, &len, fp);
 
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wformat"
         sscanf(line, "%x %x %x %x %x %x",
         &mac_list->macs[j][0],&mac_list->macs[j][1],&mac_list->macs[j][2],&mac_list->macs[j][3],&mac_list->macs[j][4],&mac_list->macs[j][5]);
+        #pragma GCC diagnostic pop
 
         if(nread > 18){
             mac_list->device_id = j;

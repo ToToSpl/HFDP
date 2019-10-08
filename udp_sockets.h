@@ -1,14 +1,12 @@
+#ifndef UDP_SOCKETS
+
+#define UDP_SOCKETS
+
 #include <sys/types.h>
 #include <pcap.h>
 #include <sys/socket.h>
 #include <arpa/inet.h> 
 #include <netinet/in.h> 
-
-#include "file_interpreter.h"
-
-#ifndef UDP_SOCKETS
-
-#define UDP_SOCKETS
 
 /*
  *             ----------UDP SOCKETS INFORMATION-----------

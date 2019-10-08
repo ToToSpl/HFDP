@@ -1,3 +1,5 @@
+#include "udp_sockets.h"
+
 #include <stdio.h> 
 #include <stdlib.h> 
 #include <unistd.h> 
@@ -6,12 +8,6 @@
 #include <sys/socket.h> 
 #include <arpa/inet.h> 
 #include <netinet/in.h> 
-
-#include "udp_sockets.h"
-#include "file_interpreter.h"
-#include "HFDP.h"
-#include <pcap.h>
- 
 
 int udp_init(udp_socket* udp_info){
 	
@@ -44,20 +40,12 @@ int udp_init(udp_socket* udp_info){
 void udp_listener(udp_socket* udp_info) { 
 
 	int len = sizeof(udp_info->cliaddr); 
-    int n = -1; 
+    int n = -1;
 	
-	while(n){
+	while(n == -1){
 		n = recvfrom(udp_info->sockfd, udp_info->buffer, udp_info->buffer_size, 
 			0, ( struct sockaddr *) &udp_info->cliaddr, 
 			&len);
-        /*
-		if(n > 0){
-            //DO STUFF HERE
-			printf("size: %i\n",n);
-			for(int i=0; i < n; i++) printf("%X ", buffer[i]);
-			printf("\n\n");
-		}
-        */
 	}
 	udp_info->last_packet_size = n;
 }

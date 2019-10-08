@@ -24,12 +24,12 @@
 
 typedef struct{
     int num_of_macs, device_id;
-    int **macs;
+    u_int8_t **macs;
 }MAC_LIST;
 
 typedef struct{
     int socket,buffer;
-    int *mac;
+    u_int8_t *mac;
     char fec[10], direction[10];
     udp_socket *udp;
     int isCorrupted;

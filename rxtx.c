@@ -1,3 +1,5 @@
+#include "rxtx.h"
+
 #include <sys/types.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,7 +8,6 @@
 #include <pcap.h>
 
 #include "file_interpreter.h"
-#include "rxtx.h"
 #include "HFDP.h"
 #include "udp_sockets.h"
 
@@ -39,7 +40,6 @@ void initTransmission(char* udp_file, char* mac_file, SOCKET_LIST* socket_list, 
 
         socket_list->sockets[i]->udp = ptr;
     }
-
 }
 
 void sendLocalToAir(SOCKET_LIST* socket_list, MAC_LIST* mac_list, int socketID, pcap_t *device, u_int8_t* globalRSSI){
@@ -51,14 +51,17 @@ void sendLocalToAir(SOCKET_LIST* socket_list, MAC_LIST* mac_list, int socketID, 
     udp_listener(sock_ptr->udp);
 
     //making local header for safety
-    u_int8_t* local_u8aIeeeHeader_beacon = malloc(sizeof(u8aIeeeHeader_beacon));
-    memcpy(local_u8aIeeeHeader_beacon, u8aIeeeHeader_beacon, sizeof(u8aIeeeHeader_beacon));
+    u_int8_t* local_u8aIeeeHeader_beacon = malloc(IEEE_SIZE);
+    memcpy(local_u8aIeeeHeader_beacon, u8aIeeeHeader_beacon, IEEE_SIZE);
 
     //now let us create a HFDP struct and populate it with known info
     HFDP* hfdp_struct = malloc(sizeof(HFDP));
     hfdp_struct->id = socketID;
     hfdp_struct->rssi = ++*globalRSSI;
     hfdp_struct->size = sock_ptr->udp->last_packet_size;
+    hfdp_struct->reMAC = malloc(MAC_SIZE);
+    hfdp_struct->flags = 0x00;
+
     memcpy(hfdp_struct->reMAC, sock_ptr->mac, MAC_SIZE);
 
     //setting FEC flag
@@ -73,6 +76,7 @@ void sendLocalToAir(SOCKET_LIST* socket_list, MAC_LIST* mac_list, int socketID, 
         targetID = i;
         break;
         next:
+        continue;
     }
 
     //check if the packet is one device higher or lower i.e will packet have to be resend
@@ -101,7 +105,7 @@ void sendLocalToAir(SOCKET_LIST* socket_list, MAC_LIST* mac_list, int socketID, 
     for(int i = 0; i < finalPacket->size; i++){
         printf("%X ",finalPacket->buff[i]);
     }
-    printf("\n");
+    printf("\n\n");
     #endif
 
     //finally sending packet
@@ -117,14 +121,12 @@ void sendLocalToAir(SOCKET_LIST* socket_list, MAC_LIST* mac_list, int socketID, 
     //cleaning finalPacket
     free(finalPacket->buff); free(finalPacket);
     //cleaning hfdp_struct
-    free(hfdp_struct->data); free(hfdp_struct);
-    //cleaning sock_ptr
-    free(sock_ptr);
+    free(hfdp_struct->data); free(hfdp_struct->reMAC); free(hfdp_struct);
     //cleaning local header
     free(local_u8aIeeeHeader_beacon);
 }
 
-void sendAirToLocal(SOCKET_LIST* socket_list, MAC_LIST* mac_list, HFDP* phfdp, pcap_t *device, u_int8_t* buffer, int bufLen){
+void sendAirToLocal(SOCKET_LIST* socket_list, MAC_LIST* mac_list, HFDP* phfdp, pcap_t *device){
 
     //first let us see if the package should be resend
     if(phfdp->flags & RESEND){
@@ -143,6 +145,7 @@ void sendAirToLocal(SOCKET_LIST* socket_list, MAC_LIST* mac_list, HFDP* phfdp, p
             targetID = i;
             break;
             next:
+            continue;
         }
 
         if(targetID == -1){
@@ -151,7 +154,7 @@ void sendAirToLocal(SOCKET_LIST* socket_list, MAC_LIST* mac_list, HFDP* phfdp, p
             return;
         }
 
-        //check if the packet is one device higher or lower i.e will packet have to be resend
+        //check if the packet is one device higher or lower i.e. will packet have to be resend
         if(targetID-1 == mac_list->device_id || targetID+1 == mac_list->device_id){
             //packet will not have to be resend again, setting flag to zero
             phfdp->flags ^= RESEND;
@@ -193,10 +196,15 @@ void sendAirToLocal(SOCKET_LIST* socket_list, MAC_LIST* mac_list, HFDP* phfdp, p
     sockptr->udp->buffer = malloc(phfdp->size);
     memcpy(sockptr->udp->buffer, phfdp->data, phfdp->size);
 
+    #ifdef DEBUG
+        for(int i = 0; i < phfdp->size; i++){
+            printf("%X ", phfdp->data[i]);
+        }
+        printf("\n");
+    #endif
+
     udp_send(sockptr->udp, phfdp->size);
 
     //now cleaning memory
     free(sockptr->udp->buffer);
-    free(sockptr);
-
 }

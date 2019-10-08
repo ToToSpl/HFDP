@@ -18,7 +18,7 @@
 
 //header taken from Packetspammer by Andy Green <andy@warmcat.com>
 //i treat this as magic spell
-u_int8_t u8aRadiotapHeader[] = {
+static u_int8_t u8aRadiotapHeader[] = {
 	0x00, 0x00, // <-- radiotap version
 	0x19, 0x00, // <- radiotap header length
 	0x6f, 0x08, 0x00, 0x00, // <-- bitmap
@@ -31,7 +31,7 @@ u_int8_t u8aRadiotapHeader[] = {
 	0x01, // <-- antenna
 };
 
-u_int8_t u8aIeeeHeader_beacon[] = {
+static u_int8_t u8aIeeeHeader_beacon[] = {
 	0x08, 0x01, 0x00, 0x00, // frame control field (2 bytes), duration (2 bytes)
 	0xff, 0xff, 0xff, 0xff, 0xff, 0xff,// 1st byte of IEEE802.11 RA (mac) must be 0xff or something odd, otherwise strange things happen. second byte is the port (will be overwritten later)
 	0x13, 0x22, 0x33, 0x44, 0x55, 0x66, // mac
@@ -49,7 +49,7 @@ void initTransmission(char* udp_file, char* mac_file, SOCKET_LIST* socket_list, 
 void sendLocalToAir(SOCKET_LIST* socket_list, MAC_LIST* mac_list, int socketID, pcap_t *device, u_int8_t* globalRSSI);
 
 //this function is sitting in main in callback func
-void sendAirToLocal(SOCKET_LIST* socket_list, MAC_LIST* mac_list, HFDP* phfdp, pcap_t *device, u_int8_t* buffer, int bufLen);
+void sendAirToLocal(SOCKET_LIST* socket_list, MAC_LIST* mac_list, HFDP* phfdp, pcap_t *device);
 
 
 #endif

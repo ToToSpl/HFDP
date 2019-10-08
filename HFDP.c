@@ -1,9 +1,9 @@
+#include "HFDP.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
-
-#include "HFDP.h"
 
 void readHFDP(u_int8_t *buffer, HFDP* container){
     container->id = buffer[HFDP_START_PLACE  + ID_OFFSET];
@@ -25,7 +25,6 @@ void readHFDP(u_int8_t *buffer, HFDP* container){
 void generatePacket(packet* whole_packet, u_int8_t *radiotap, u_int8_t *ieec, HFDP *container){
 
     whole_packet->buff = malloc(RADIOTAP_SIZE + IEEE_SIZE + HEADER_SIZE + container->size);
-    printf("container size: %i\n",container->size);
 
     u_int8_t *ptr = whole_packet->buff;
     memcpy(ptr,radiotap,RADIOTAP_SIZE);
@@ -43,7 +42,7 @@ void generatePacket(packet* whole_packet, u_int8_t *radiotap, u_int8_t *ieec, HF
     memcpy(ptr,&container->rssi,RSSI_SIZE);
     ptr+=RSSI_SIZE;
 
-    if(container->flags & RESEND != 0x00) memcpy(ptr,&container->reMAC,REMAC_SIZE);
+    if(container->flags & RESEND) memcpy(ptr,&container->reMAC,REMAC_SIZE);
     else memset(ptr, 0, REMAC_SIZE);
     ptr+=REMAC_SIZE;
 
