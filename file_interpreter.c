@@ -26,23 +26,24 @@ void generate_headers(char *file_name, SOCKET_LIST* socket_list){
     for(int i = 0; i < numOflines; i++){
 
         socket_list->sockets[i] = malloc(sizeof(SOCKET_INFO));
-        socket_list->sockets[i]->mac = malloc(sizeof(int) * 6);
+        socket_list->sockets[i]->mac = malloc(6);
 
         nread = getline(&line, &len, fp);
 
         #pragma GCC diagnostic push
         #pragma GCC diagnostic ignored "-Wformat"
-        sscanf(line, "%d %s %x %x %x %x %x %x %s %d",
+        sscanf(line, "%d %s %x %x %x %x %x %x %s %d %s",
             &socket_list->sockets[i]->socket,
-            socket_list->sockets[i]->fec,
+             socket_list->sockets[i]->fec,
             &socket_list->sockets[i]->mac[0],
             &socket_list->sockets[i]->mac[1],
             &socket_list->sockets[i]->mac[2],
             &socket_list->sockets[i]->mac[3],
             &socket_list->sockets[i]->mac[4],
             &socket_list->sockets[i]->mac[5], 
-            socket_list->sockets[i]->direction, 
-            &socket_list->sockets[i]->buffer);
+             socket_list->sockets[i]->direction, 
+            &socket_list->sockets[i]->buffer,
+             socket_list->sockets[i]->servOrClient);
         #pragma GCC diagnostic pop
     }
 }

@@ -4,7 +4,7 @@
  * Quick info how config files work
  * udp_config file holds the information how each udp port should be set
  * each line of the config is next udp server the ID of each one increase by one and the first has ID 0
- * divided by spaces we have these options: socket FEC/NO_FEC ReMAC INPUT/OUTPUT/BIDIRECTIONAL BUFFER_SIZE
+ * divided by spaces we have these options: socket FEC/NO_FEC ReMAC INPUT/OUTPUT/BIDIRECTIONAL BUFFER_SIZE CLIENT/SERVER 
  * ReMAC is a six byte MAC address of the device to which packet should go packet will be resend according to mac list till it reach it source
  * 
  * mac_list has list of macs beggining from the first device till last in hiearchy
@@ -30,7 +30,7 @@ typedef struct{
 typedef struct{
     int socket,buffer;
     u_int8_t *mac;
-    char fec[10], direction[10];
+    char fec[10], direction[10], servOrClient[10];
     udp_socket *udp;
     int isCorrupted;
 }SOCKET_INFO;

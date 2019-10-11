@@ -32,7 +32,7 @@ void initTransmission(char* udp_file, char* mac_file, SOCKET_LIST* socket_list, 
 
         ptr->port = socket_list->sockets[i]->socket;
         
-        if(udp_init(ptr) < 0){
+        if(udp_init(ptr, socket_list->sockets[i]->servOrClient) < 0){
             printf("Error occured on creating socket id: %i\nThis socket will be ignored\n",i);
             socket_list->sockets[i]->isCorrupted=1;
             break;

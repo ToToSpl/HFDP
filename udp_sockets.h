@@ -27,7 +27,7 @@ typedef struct{
 
 
 //generates udp server
-int udp_init(udp_socket* udp_info);
+int udp_init(udp_socket* udp_info, char* servOrClient);
 
 //listen for udp packets and put recieved data into buffer
 void udp_listener(udp_socket* udp_info);
