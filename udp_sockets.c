@@ -26,8 +26,10 @@ int udp_init(udp_socket* udp_info, char* servOrClient){
 	udp_info->servaddr.sin_family = AF_INET; // IPv4 
 	udp_info->servaddr.sin_addr.s_addr = INADDR_ANY; 
 	udp_info->servaddr.sin_port = htons(udp_info->port);
-	
-	if(servOrClient == "SERVER"){
+
+	if(servOrClient[0] == 'S'){
+		printf("SERVER MODE\n");
+
 		// Bind the socket with the server address 
 		if ( bind(udp_info->sockfd, (const struct sockaddr *)&udp_info->servaddr, 
 				sizeof(udp_info->servaddr)) < 0 ) 

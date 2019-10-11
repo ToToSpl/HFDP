@@ -65,7 +65,7 @@ void sendLocalToAir(SOCKET_LIST* socket_list, MAC_LIST* mac_list, int socketID, 
     memcpy(hfdp_struct->reMAC, sock_ptr->mac, MAC_SIZE);
 
     //setting FEC flag
-    if(sock_ptr->fec == "FEC") hfdp_struct->flags |= ENCODED;
+    if(sock_ptr->fec[0] == 'F') hfdp_struct->flags |= ENCODED;
 
     //now we have to check where our packet is supposed to go
     int targetID = mac_list->device_id;
@@ -108,12 +108,14 @@ void sendLocalToAir(SOCKET_LIST* socket_list, MAC_LIST* mac_list, int socketID, 
     printf("\n\n");
     #endif
 
+    for(int i = 0; i < 1; i++){
     //finally sending packet
     int lookup_return_code = pcap_inject(device,finalPacket->buff,finalPacket->size);
         if(lookup_return_code != finalPacket->size){
             printf("Error during sending!\n");
             sock_ptr->isCorrupted = 1;
         }
+    }
 
     //NOW WE HAVE TO CLEAN ALLOCATED MEMORY
     //REMEMBER ABOUT BUFFERS INSIDE STRUCTS
