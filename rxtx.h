@@ -39,6 +39,7 @@ static u_int8_t u8aIeeeHeader_beacon[] = {
 	0x10, 0x86, // IEEE802.11 seqnum, (will be overwritten later by Atheros firmware/wifi chip)
 };
 
+#define MAX_SINGLE_PACKET_SIZE 1024
 #define MAC_OFFSET 10
 #define MAC_SIZE 6
 

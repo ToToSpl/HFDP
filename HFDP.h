@@ -23,10 +23,12 @@
 */
 
 
+//BIG SIZES
 #define HFDP_START_PLACE 42
 #define IEEE_SIZE 24
 #define RADIOTAP_SIZE 25
 
+//OFFSETS
 #define ID_OFFSET 0
 #define FLAGS_OFFSET 1
 #define RSSI_OFFSET 2
@@ -34,6 +36,7 @@
 #define SIZE_OFFSET 9
 #define DATA_OFFSET 11
 
+//DATA SIZES
 #define HEADER_SIZE 11
 #define ID_SIZE 1
 #define FLAGS_SIZE 1
@@ -41,12 +44,15 @@
 #define REMAC_SIZE 6
 #define SIZE_SIZE 2
 
+//FLAGS
 #define HEARTBEAT 0x01
 #define ISFEC 0x02
 #define BEAM 0x04
 #define RESEND 0x08
 #define ENCODED 0x10
 #define SEND_TO_SLAVE 0x20
+#define FRACTURED_PACKET 0x40
+#define PACKET_END 0x80
 
 
 typedef struct

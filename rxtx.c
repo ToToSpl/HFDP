@@ -11,7 +11,7 @@
 #include "HFDP.h"
 #include "udp_sockets.h"
 
-#define DEBUG
+//#define DEBUG
 
 void initTransmission(char* udp_file, char* mac_file, SOCKET_LIST* socket_list, MAC_LIST* mac_list){
 
@@ -94,27 +94,79 @@ void sendLocalToAir(SOCKET_LIST* socket_list, MAC_LIST* mac_list, int socketID, 
     }
     memcpy(local_u8aIeeeHeader_beacon + MAC_OFFSET + MAC_SIZE, mac_list->macs[mac_list->device_id], MAC_SIZE);
 
-    //copying data to hfdp struct
-    hfdp_struct->data = malloc(hfdp_struct->size);
-    memcpy(hfdp_struct->data, sock_ptr->udp->buffer, hfdp_struct->size);
-
+    //pointer for buffer that goes to pcap
     packet *finalPacket = malloc(sizeof(packet));
-    generatePacket(finalPacket, u8aRadiotapHeader, local_u8aIeeeHeader_beacon, hfdp_struct);
 
-    #ifdef DEBUG
-    for(int i = 0; i < finalPacket->size; i++){
-        printf("%X ",finalPacket->buff[i]);
-    }
-    printf("\n\n");
-    #endif
+    //If udp packet is bigger than max hfdp packet size we have to send it in parts
+    if(sock_ptr->udp->last_packet_size > MAX_SINGLE_PACKET_SIZE){
+        int send_num = 0;
 
-    for(int i = 0; i < 1; i++){
-    //finally sending packet
-    int lookup_return_code = pcap_inject(device,finalPacket->buff,finalPacket->size);
-        if(lookup_return_code != finalPacket->size){
-            printf("Error during sending!\n");
-            sock_ptr->isCorrupted = 1;
+        //first set in the flag so we know that the packet is cutted
+        hfdp_struct->flags |= FRACTURED_PACKET;
+
+        //preparing buffers
+        hfdp_struct->data = malloc(MAX_SINGLE_PACKET_SIZE);
+        hfdp_struct->size = MAX_SINGLE_PACKET_SIZE;
+        
+        //now sending packets until next packet is smaller than max packet size
+        while((sock_ptr->udp->last_packet_size - send_num) > MAX_SINGLE_PACKET_SIZE){
+            
+            //copying data to hfdp struct
+            memcpy(hfdp_struct->data, sock_ptr->udp->buffer + send_num, MAX_SINGLE_PACKET_SIZE);
+            generatePacket(finalPacket, u8aRadiotapHeader, local_u8aIeeeHeader_beacon, hfdp_struct);
+
+            #ifdef DEBUG
+            for(int i = 0; i < finalPacket->size; i++){
+                printf("%X ",finalPacket->buff[i]);
+            }
+            printf("\n\n");
+            #endif
+
+            //sending given packet
+            int lookup_return_code = pcap_inject(device,finalPacket->buff,finalPacket->size);
+                if(lookup_return_code != finalPacket->size){
+                    printf("Error during sending! size of packet: %i\n",lookup_return_code);
+                    sock_ptr->isCorrupted = 1;
+                }
+
+            //increasing send_num
+            send_num += MAX_SINGLE_PACKET_SIZE;
         }
+
+        //now setting that this is the last package
+        hfdp_struct->flags |= PACKET_END;
+        //copying data to hfdp struct
+        memcpy(hfdp_struct->data, sock_ptr->udp->buffer + send_num, sock_ptr->udp->last_packet_size - send_num);
+        generatePacket(finalPacket, u8aRadiotapHeader, local_u8aIeeeHeader_beacon, hfdp_struct);
+        //sending finall packet
+        int lookup_return_code = pcap_inject(device,finalPacket->buff,finalPacket->size);
+            if(lookup_return_code != finalPacket->size){
+                printf("Error during sending! size of packet: %i\n",lookup_return_code);
+                sock_ptr->isCorrupted = 1;
+            }
+    //this is normall sending of the package
+    }else{
+        //copying data to hfdp struct
+        hfdp_struct->data = malloc(hfdp_struct->size);
+        memcpy(hfdp_struct->data, sock_ptr->udp->buffer, hfdp_struct->size);
+
+        generatePacket(finalPacket, u8aRadiotapHeader, local_u8aIeeeHeader_beacon, hfdp_struct);
+
+        #ifdef DEBUG
+        for(int i = 0; i < finalPacket->size; i++){
+            printf("%X ",finalPacket->buff[i]);
+        }
+        printf("\n\n");
+        #endif
+
+        printf("DATA SIZE: %i\n", hfdp_struct->size);
+
+        //finally sending packet
+        int lookup_return_code = pcap_inject(device,finalPacket->buff,finalPacket->size);
+            if(lookup_return_code != finalPacket->size){
+                printf("Error during sending! size of packet: %i\n",lookup_return_code);
+                sock_ptr->isCorrupted = 1;
+            }
     }
 
     //NOW WE HAVE TO CLEAN ALLOCATED MEMORY

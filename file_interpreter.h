@@ -28,11 +28,10 @@ typedef struct{
 }MAC_LIST;
 
 typedef struct{
-    int socket,buffer;
+    int socket, buffer, isCorrupted;
     u_int8_t *mac;
     char fec[10], direction[10], servOrClient[10];
     udp_socket *udp;
-    int isCorrupted;
 }SOCKET_INFO;
 
 typedef struct{
