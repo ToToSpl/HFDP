@@ -29,7 +29,7 @@ typedef struct{
 
 typedef struct{
     int socket, buffer, isCorrupted;
-    u_int8_t *mac;
+    u_int8_t *mac, *rxFrac;
     char fec[10], direction[10], servOrClient[10];
     udp_socket *udp;
 }SOCKET_INFO;

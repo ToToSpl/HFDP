@@ -38,6 +38,7 @@ void initTransmission(char* udp_file, char* mac_file, SOCKET_LIST* socket_list, 
             break;
         }
 
+        socket_list->sockets[i]->rxFrac = NULL;
         socket_list->sockets[i]->udp = ptr;
     }
 }
@@ -197,9 +198,8 @@ void sendAirToLocal(SOCKET_LIST* socket_list, MAC_LIST* mac_list, HFDP* phfdp, p
         generatePacket(finalPacket, u8aRadiotapHeader, local_u8aIeeeHeader_beacon, phfdp);
 
         #ifdef DEBUG
-        for(int i = 0; i < finalPacket->size; i++){
+        for(int i = 0; i < finalPacket->size; i++)
             printf("%X ",finalPacket->buff[i]);
-        }
         printf("\n");
         #endif
 
@@ -219,18 +219,56 @@ void sendAirToLocal(SOCKET_LIST* socket_list, MAC_LIST* mac_list, HFDP* phfdp, p
 
     //if no resend, packet should be send to udp
     SOCKET_INFO* sockptr = socket_list->sockets[phfdp->id];
-    sockptr->udp->buffer = malloc(phfdp->size);
-    memcpy(sockptr->udp->buffer, phfdp->data, phfdp->size);
+    
 
-    #ifdef DEBUG
-        for(int i = 0; i < phfdp->size; i++){
-            printf("%X ", phfdp->data[i]);
+    
+
+    //logic for manipulating fragmented packets
+    if(phfdp->flags & FRACTURED_PACKET){
+        if(sockptr->rxFrac == NULL){
+            //this is the beginning of the packet
+            //setting max size of the buff
+            sockptr->udp->buffer = malloc(sockptr->buffer);
+            sockptr->rxFrac = sockptr->udp->buffer;
         }
-        printf("\n");
-    #endif
 
-    udp_send(sockptr->udp, phfdp->size);
+        //putting to buffer
+        memcpy(sockptr->rxFrac, phfdp->data, phfdp->size);
+        sockptr->rxFrac += phfdp->size;
 
-    //now cleaning memory
-    free(sockptr->udp->buffer);
+        if(phfdp->flags & PACKET_END){
+            //thats the last packet we can send udp and close buffer
+
+            #ifdef DEBUG
+            for(int i = 0; i < sockptr->rxFrac - sockptr->udp->buffer; i++)
+                printf("%X ",sockptr->udp->buffer[i]);
+            printf("\n\n");
+            #endif
+
+            udp_send(sockptr->udp, sockptr->rxFrac - sockptr->udp->buffer);
+            sockptr->rxFrac = NULL;
+            free(sockptr->udp->buffer);
+        }
+    }else{
+
+        //if rcFrac is not null that means that we have lost end packet part
+        if(sockptr->rxFrac != NULL){
+            //LOST PACKET SOMETHING HAS TO BE TOLD IN THE FUTURE!!
+            free(sockptr->udp->buffer);
+            sockptr->rxFrac = NULL;
+        }
+
+        sockptr->udp->buffer = malloc(phfdp->size);
+        memcpy(sockptr->udp->buffer, phfdp->data, phfdp->size);
+        udp_send(sockptr->udp, phfdp->size);
+
+        #ifdef DEBUG
+        for(int i = 0; i < phfdp->size; i++)
+            printf("%X ", phfdp->data[i]);
+        printf("\n\n");
+        #endif
+
+        //now cleaning memory
+        free(sockptr->udp->buffer);
+    }
 }
