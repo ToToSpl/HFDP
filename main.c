@@ -18,6 +18,7 @@
 MAC_LIST *global_mac_list;
 SOCKET_LIST *global_socket_list;
 pcap_t *global_device;
+HFDP *prevContainer;
 
 int printDevices(char *error_buffer);
 void callback(u_int8_t *user, const struct pcap_pkthdr *h, const u_int8_t *bytes);
@@ -63,6 +64,7 @@ int main(int argc, char **argv){
 
     #endif
 
+    prevContainer = malloc(sizeof(HFDP));
     printf("Launching reading loop...\n");
     lookup_return_code = pcap_loop(global_device, -1, callback, "main");
         
@@ -98,6 +100,11 @@ void callback(u_int8_t *user, const struct pcap_pkthdr *h, const u_int8_t *bytes
 
     HFDP *container = malloc(sizeof(HFDP));
     readHFDP((u_int8_t*)bytes,container);
+
+    //if this is resend of the package, ignore it
+    if(container->id == prevContainer->id && container->rssi == prevContainer->rssi) return;
+    else memcpy(prevContainer, container, sizeof(HFDP));
+
     //here goes func from rxtx
     sendAirToLocal(global_socket_list, global_mac_list, container, global_device);
 

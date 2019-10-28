@@ -43,6 +43,8 @@ static u_int8_t u8aIeeeHeader_beacon[] = {
 #define MAC_OFFSET 10
 #define MAC_SIZE 6
 
+#define RESEND_AMOUNT 3
+
 //initialize udp sockets based on text files and populates lists
 void initTransmission(char* udp_file, char* mac_file, SOCKET_LIST* socket_list, MAC_LIST* mac_list);
 

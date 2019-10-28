@@ -119,12 +119,17 @@ void sendLocalToAir(SOCKET_LIST* socket_list, MAC_LIST* mac_list, int socketID, 
         }
         printf("\n\n");
         #endif
+
         //sending given packet
-        int lookup_return_code = pcap_inject(device,finalPacket->buff,finalPacket->size);
+        for(int resend = 0; resend < RESEND_AMOUNT; resend++){
+
+            int lookup_return_code = pcap_inject(device,finalPacket->buff,finalPacket->size);
             if(lookup_return_code != finalPacket->size){
                 printf("Error during sending! size of packet: %i\n",lookup_return_code);
                 sock_ptr->isCorrupted = 1;
             }
+        }
+        
         //increasing send_num
         send_num += MAX_SINGLE_PACKET_SIZE;
     }
@@ -136,12 +141,14 @@ void sendLocalToAir(SOCKET_LIST* socket_list, MAC_LIST* mac_list, int socketID, 
     memcpy(hfdp_struct->data, sock_ptr->udp->buffer + send_num, sock_ptr->udp->last_packet_size - send_num);
     generatePacket(finalPacket, u8aRadiotapHeader, local_u8aIeeeHeader_beacon, hfdp_struct);
     //sending final packet
-    int lookup_return_code = pcap_inject(device,finalPacket->buff,finalPacket->size);
+    for(int resend = 0; resend < RESEND_AMOUNT; resend++){
+        int lookup_return_code = pcap_inject(device,finalPacket->buff,finalPacket->size);
         if(lookup_return_code != finalPacket->size){
             printf("Error during sending! size of packet: %i\n",lookup_return_code);
             sock_ptr->isCorrupted = 1;
         }
-
+    }
+    
     //NOW WE HAVE TO CLEAN ALLOCATED MEMORY
     //REMEMBER ABOUT BUFFERS INSIDE STRUCTS
 
@@ -204,11 +211,13 @@ void sendAirToLocal(SOCKET_LIST* socket_list, MAC_LIST* mac_list, HFDP* phfdp, p
         #endif
 
         //finally sending packet
-        int lookup_return_code = pcap_inject(device,finalPacket->buff,finalPacket->size);
+        for(int resend = 0; resend < RESEND_AMOUNT; resend++){
+            int lookup_return_code = pcap_inject(device,finalPacket->buff,finalPacket->size);
             if(lookup_return_code != finalPacket->size){
                 printf("Error during resending!\n");
             }
-
+        }
+        
         //cleaning memory
         free(local_u8aIeeeHeader_beacon);
         free(finalPacket->buff);
@@ -251,7 +260,7 @@ void sendAirToLocal(SOCKET_LIST* socket_list, MAC_LIST* mac_list, HFDP* phfdp, p
         }
     }else{
 
-        //if rcFrac is not null that means that we have lost end packet part
+        //if rxFrac is not null that means that we have lost end packet part
         if(sockptr->rxFrac != NULL){
             //LOST PACKET SOMETHING HAS TO BE TOLD IN THE FUTURE!!
             free(sockptr->udp->buffer);
