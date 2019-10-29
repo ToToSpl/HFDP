@@ -162,11 +162,7 @@ void sendLocalToAir(SOCKET_LIST* socket_list, MAC_LIST* mac_list, int socketID, 
     free(local_u8aIeeeHeader_beacon);
 }
 
-void sendAirToLocal(SOCKET_LIST* socket_list, MAC_LIST* mac_list, HFDP* phfdp, HFDP* prevHfdp, pcap_t *device){
-
-    //checking if this package was already recieved
-    if(phfdp->id == prevHfdp->id && phfdp->rssi == prevHfdp->rssi) return;
-    else memcpy(prevHfdp, phfdp, sizeof(HFDP));
+void sendAirToLocal(SOCKET_LIST* socket_list, MAC_LIST* mac_list, HFDP* phfdp, pcap_t *device){
 
     //first let us see if the package should be resend
     if(phfdp->flags & RESEND){
