@@ -43,7 +43,7 @@ static u_int8_t u8aIeeeHeader_beacon[] = {
 #define MAC_OFFSET 10
 #define MAC_SIZE 6
 
-#define RESEND_AMOUNT 3
+#define RESEND_AMOUNT 1
 
 //initialize udp sockets based on text files and populates lists
 void initTransmission(char* udp_file, char* mac_file, SOCKET_LIST* socket_list, MAC_LIST* mac_list);
@@ -52,7 +52,7 @@ void initTransmission(char* udp_file, char* mac_file, SOCKET_LIST* socket_list, 
 void sendLocalToAir(SOCKET_LIST* socket_list, MAC_LIST* mac_list, int socketID, pcap_t *device, u_int8_t* globalRSSI);
 
 //this function is sitting in main in callback func
-void sendAirToLocal(SOCKET_LIST* socket_list, MAC_LIST* mac_list, HFDP* phfdp, pcap_t *device);
+void sendAirToLocal(SOCKET_LIST* socket_list, MAC_LIST* mac_list, HFDP* phfdp, HFDP* prevHfdp, pcap_t *device);
 
 
 #endif
