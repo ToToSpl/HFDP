@@ -9,7 +9,7 @@
 #include "file_interpreter.h"
 #include "rxtx.h"
 
-#define SENDING
+//#define SENDING
 
 #define CUT_RADIOTAP_SIZE 18
 //because during sendig packet is cut of timestamp and something more we cant just add size of radiotap and offset
@@ -55,6 +55,21 @@ int main(int argc, char **argv){
 
     printf("Init success\n");
 
+    //forking servers for multpile udp inputs
+    for(int i = 0; i < global_socket_list->number_of_sockets; i++){
+        //if given socket is just input, skip it
+        if(global_socket_list->sockets[i]->direction[0] == 'I') continue;
+
+        //else we create fork
+        if(fork() == 0){
+            printf("FORK NO:%i CREATED\n", i);
+            while(1){
+                sendLocalToAir(global_socket_list, global_mac_list, i, global_device, globalRSSI);
+            }
+        }
+    }
+    
+
     #ifdef SENDING
 
     while(1){
@@ -66,24 +81,6 @@ int main(int argc, char **argv){
     printf("Launching reading loop...\n");
     lookup_return_code = pcap_loop(global_device, -1, callback, "main");
         
-    return 0;
-}
-
-
-
-int printDevices(char *error_buffer){
-    pcap_if_t *devices, *temp;
-
-    if(pcap_findalldevs(&devices, error_buffer) == -1){
-        printf("ERROR FINDING DEVICES: %s\n", error_buffer);
-        return -1;
-    }
-    
-    for(temp = devices; temp; temp = temp->next){
-        printf("%s\n", temp->name);
-    }
-    pcap_freealldevs(devices);
-    pcap_freealldevs(temp);
     return 0;
 }
 
@@ -115,4 +112,20 @@ void callback(u_int8_t *user, const struct pcap_pkthdr *h, const u_int8_t *bytes
 
     free(container->data);
     free(container);
+}
+
+int printDevices(char *error_buffer){
+    pcap_if_t *devices, *temp;
+
+    if(pcap_findalldevs(&devices, error_buffer) == -1){
+        printf("ERROR FINDING DEVICES: %s\n", error_buffer);
+        return -1;
+    }
+    
+    for(temp = devices; temp; temp = temp->next){
+        printf("%s\n", temp->name);
+    }
+    pcap_freealldevs(devices);
+    pcap_freealldevs(temp);
+    return 0;
 }
