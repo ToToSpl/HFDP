@@ -89,11 +89,11 @@ void sendLocalToAir(SOCKET_LIST* socket_list, MAC_LIST* mac_list, int socketID, 
 
     //setting correct mac address
     if(targetID > mac_list->device_id){
-        memcpy(local_u8aIeeeHeader_beacon + MAC_OFFSET, mac_list->macs[mac_list->device_id + 1], MAC_SIZE);
+        memcpy(local_u8aIeeeHeader_beacon + MAC_OFFSET + MAC_SIZE, mac_list->macs[mac_list->device_id + 1], MAC_SIZE);
     }else if(targetID < mac_list->device_id){
-        memcpy(local_u8aIeeeHeader_beacon + MAC_OFFSET, mac_list->macs[mac_list->device_id - 1], MAC_SIZE);
+        memcpy(local_u8aIeeeHeader_beacon + MAC_OFFSET + MAC_SIZE, mac_list->macs[mac_list->device_id - 1], MAC_SIZE);
     }
-    memcpy(local_u8aIeeeHeader_beacon + MAC_OFFSET + MAC_SIZE, mac_list->macs[mac_list->device_id], MAC_SIZE);
+    memcpy(local_u8aIeeeHeader_beacon + MAC_OFFSET, mac_list->macs[mac_list->device_id], MAC_SIZE);
 
     //pointer for buffer that goes to pcap
     packet *finalPacket = malloc(sizeof(packet));
