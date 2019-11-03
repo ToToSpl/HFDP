@@ -5,11 +5,11 @@
 #include <unistd.h>
 #include <string.h>
 
+#include <pthread.h>
+
 #include "HFDP.h"
 #include "file_interpreter.h"
 #include "rxtx.h"
-
-//#define SENDING
 
 #define CUT_RADIOTAP_SIZE 18
 //because during sendig packet is cut of timestamp and something more we cant just add size of radiotap and offset
@@ -18,9 +18,11 @@
 MAC_LIST *global_mac_list;
 SOCKET_LIST *global_socket_list;
 pcap_t *global_device;
+u_int8_t* globalRSSI;
 
 int printDevices(char *error_buffer);
 void callback(u_int8_t *user, const struct pcap_pkthdr *h, const u_int8_t *bytes);
+void *localListener(void *intI);
 
 
 int main(int argc, char **argv){
@@ -49,39 +51,40 @@ int main(int argc, char **argv){
 
     global_mac_list = malloc(sizeof(MAC_LIST));
     global_socket_list =malloc(sizeof(SOCKET_LIST));
-    u_int8_t* globalRSSI = malloc(sizeof(u_int8_t));
+    globalRSSI = malloc(sizeof(u_int8_t));
 
     initTransmission("udp_config.txt", "mac_list.txt", global_socket_list, global_mac_list);
 
     printf("Init success\n");
 
-    //forking servers for multpile udp inputs
+    //creating pointers to threads
+    pthread_t* threads = malloc(global_socket_list->number_of_sockets * sizeof(pthread_t));
+    int* ids = malloc(global_socket_list->number_of_sockets * sizeof(int));
+
+    //threading servers for multpile udp inputs
     for(int i = 0; i < global_socket_list->number_of_sockets; i++){
+
         //if given socket is just input, skip it
         if(global_socket_list->sockets[i]->direction[0] == 'I') continue;
 
-        //else we create fork
-        if(fork() == 0){
-            printf("FORK NO:%i CREATED\n", i);
-            while(1){
-                sendLocalToAir(global_socket_list, global_mac_list, i, global_device, globalRSSI);
-            }
-        }
+        ids[i] = i;
+        pthread_create(&threads[i], NULL, localListener, &ids[i]);
     }
     
 
-    #ifdef SENDING
-
-    while(1){
-        sendLocalToAir(global_socket_list, global_mac_list, 0, global_device, globalRSSI);
-    }
-
-    #endif
-
     printf("Launching reading loop...\n");
     lookup_return_code = pcap_loop(global_device, -1, callback, "main");
-        
+    
     return 0;
+}
+
+void *localListener(void *intI){
+    int *id = (int *) intI;
+    printf("Created thread with ID: %d\n",*id);
+    while (1){
+        sendLocalToAir(global_socket_list, global_mac_list, *id, global_device, globalRSSI);
+    }
+    
 }
 
 void callback(u_int8_t *user, const struct pcap_pkthdr *h, const u_int8_t *bytes){

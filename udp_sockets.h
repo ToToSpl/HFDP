@@ -20,9 +20,10 @@
 
 //this struct holds info about given udp socket
 typedef struct{
-    struct sockaddr_in servaddr, cliaddr;
+    struct sockaddr_in myAddr, deviceAddr;
     int port, buffer_size, sockfd, last_packet_size;
     u_int8_t* buffer;
+    u_int8_t serOrCli;
 }udp_socket;
 
 

@@ -11,7 +11,8 @@
 #include "HFDP.h"
 #include "udp_sockets.h"
 
-//#define DEBUG
+//#define DEBUGTX
+//#define DEBUGRX
 
 void initTransmission(char* udp_file, char* mac_file, SOCKET_LIST* socket_list, MAC_LIST* mac_list){
 
@@ -113,7 +114,7 @@ void sendLocalToAir(SOCKET_LIST* socket_list, MAC_LIST* mac_list, int socketID, 
         //copying data to hfdp struct
         memcpy(hfdp_struct->data, sock_ptr->udp->buffer + send_num, MAX_SINGLE_PACKET_SIZE);
         generatePacket(finalPacket, u8aRadiotapHeader, local_u8aIeeeHeader_beacon, hfdp_struct);
-        #ifdef DEBUG
+        #ifdef DEBUGTX
         for(int i = 0; i < finalPacket->size; i++){
             printf("%X ",finalPacket->buff[i]);
         }
@@ -198,15 +199,15 @@ void sendAirToLocal(SOCKET_LIST* socket_list, MAC_LIST* mac_list, HFDP* phfdp, p
 
         //setting correct mac address
         if(targetID > mac_list->device_id){
-            memcpy(local_u8aIeeeHeader_beacon + MAC_OFFSET, mac_list->macs[mac_list->device_id + 1], MAC_SIZE);
+            memcpy(local_u8aIeeeHeader_beacon + MAC_OFFSET + MAC_SIZE, mac_list->macs[mac_list->device_id + 1], MAC_SIZE);
         }else if(targetID < mac_list->device_id){
-            memcpy(local_u8aIeeeHeader_beacon + MAC_OFFSET, mac_list->macs[mac_list->device_id - 1], MAC_SIZE);
+            memcpy(local_u8aIeeeHeader_beacon + MAC_OFFSET + MAC_SIZE, mac_list->macs[mac_list->device_id - 1], MAC_SIZE);
         }
 
         packet *finalPacket = malloc(sizeof(packet));
         generatePacket(finalPacket, u8aRadiotapHeader, local_u8aIeeeHeader_beacon, phfdp);
 
-        #ifdef DEBUG
+        #ifdef DEBUGRX
         for(int i = 0; i < finalPacket->size; i++)
             printf("%X ",finalPacket->buff[i]);
         printf("\n");
@@ -231,15 +232,12 @@ void sendAirToLocal(SOCKET_LIST* socket_list, MAC_LIST* mac_list, HFDP* phfdp, p
     //if no resend, packet should be send to udp
     SOCKET_INFO* sockptr = socket_list->sockets[phfdp->id];
     
-
-    
-
     //logic for manipulating fragmented packets
     if(phfdp->flags & FRACTURED_PACKET){
         if(sockptr->rxFrac == NULL){
             //this is the beginning of the packet
             //setting max size of the buff
-            sockptr->udp->buffer = malloc(sockptr->buffer);
+            //sockptr->udp->buffer = malloc(sockptr->buffer);
             sockptr->rxFrac = sockptr->udp->buffer;
         }
 
@@ -250,7 +248,7 @@ void sendAirToLocal(SOCKET_LIST* socket_list, MAC_LIST* mac_list, HFDP* phfdp, p
         if(phfdp->flags & PACKET_END){
             //thats the last packet we can send udp and close buffer
 
-            #ifdef DEBUG
+            #ifdef DEBUGRX
             for(int i = 0; i < sockptr->rxFrac - sockptr->udp->buffer; i++)
                 printf("%X ",sockptr->udp->buffer[i]);
             printf("\n\n");
@@ -258,7 +256,6 @@ void sendAirToLocal(SOCKET_LIST* socket_list, MAC_LIST* mac_list, HFDP* phfdp, p
 
             udp_send(sockptr->udp, sockptr->rxFrac - sockptr->udp->buffer);
             sockptr->rxFrac = NULL;
-            free(sockptr->udp->buffer);
         }
     }else{
 
@@ -269,17 +266,13 @@ void sendAirToLocal(SOCKET_LIST* socket_list, MAC_LIST* mac_list, HFDP* phfdp, p
             sockptr->rxFrac = NULL;
         }
 
-        sockptr->udp->buffer = malloc(phfdp->size);
         memcpy(sockptr->udp->buffer, phfdp->data, phfdp->size);
         udp_send(sockptr->udp, phfdp->size);
 
-        #ifdef DEBUG
+        #ifdef DEBUGRX
         for(int i = 0; i < phfdp->size; i++)
             printf("%X ", phfdp->data[i]);
         printf("\n\n");
         #endif
-
-        //now cleaning memory
-        free(sockptr->udp->buffer);
     }
 }
