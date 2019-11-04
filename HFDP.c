@@ -17,7 +17,6 @@ void readHFDP(u_int8_t *buffer, HFDP* container){
     }
     
     container->size = buffer[HFDP_START_PLACE + SIZE_OFFSET] + (buffer[HFDP_START_PLACE + SIZE_OFFSET + 1] << 8);
-
     container->data = malloc(container->size);
     memcpy(container->data, buffer + HFDP_START_PLACE + DATA_OFFSET, container->size);
 }

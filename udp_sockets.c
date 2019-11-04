@@ -71,7 +71,7 @@ void udp_send(udp_socket* udp_info, int lenght){
             sizeof(udp_info->deviceAddr)); 
 	}else{
 		sendto(udp_info->sockfd, udp_info->buffer, lenght,  
-        0, (const struct sockaddr *) &udp_info->deviceAddr, 
-            sizeof(udp_info->deviceAddr)); 
+        0, (const struct sockaddr *) &udp_info->myAddr, 
+            sizeof(udp_info->myAddr));
 	}
 }

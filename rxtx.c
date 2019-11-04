@@ -237,7 +237,7 @@ void sendAirToLocal(SOCKET_LIST* socket_list, MAC_LIST* mac_list, HFDP* phfdp, p
         if(sockptr->rxFrac == NULL){
             //this is the beginning of the packet
             //setting max size of the buff
-            //sockptr->udp->buffer = malloc(sockptr->buffer);
+            sockptr->udp->buffer = malloc(sockptr->buffer);
             sockptr->rxFrac = sockptr->udp->buffer;
         }
 

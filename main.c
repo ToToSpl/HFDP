@@ -88,21 +88,21 @@ void *localListener(void *intI){
 }
 
 void callback(u_int8_t *user, const struct pcap_pkthdr *h, const u_int8_t *bytes){
-
+    
     //any packet that interest us cant be shorter than this
     if(h->len < CUT_RADIOTAP_SIZE + IEEE_SIZE) return;
 
     for(int i = 0; i < MAC_SIZE; i++){
         if(bytes[PATTERN_OFFSET + i] != global_mac_list->macs[global_mac_list->device_id][i]) return;
     }
-
+    
     HFDP *container = malloc(sizeof(HFDP));
     readHFDP((u_int8_t*)bytes,container);
 
-
+    
     //here goes func from rxtx
     sendAirToLocal(global_socket_list, global_mac_list, container, global_device);
-
+     
     /*
     printf("SIZE OF PACKET: %i\n",h->len);
     printf("packet ID: %i\n",container->id);
