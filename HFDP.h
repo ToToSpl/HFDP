@@ -27,6 +27,7 @@
 #define HFDP_START_PLACE 42
 #define IEEE_SIZE 24
 #define RADIOTAP_SIZE 25
+#define SINGLE_MAX_HFDP 1500
 
 //OFFSETS
 #define ID_OFFSET 0

@@ -19,6 +19,7 @@ MAC_LIST *global_mac_list;
 SOCKET_LIST *global_socket_list;
 pcap_t *global_device;
 u_int8_t* globalRSSI;
+HFDP* global_container;
 
 int printDevices(char *error_buffer);
 void callback(u_int8_t *user, const struct pcap_pkthdr *h, const u_int8_t *bytes);
@@ -52,6 +53,8 @@ int main(int argc, char **argv){
     global_mac_list = malloc(sizeof(MAC_LIST));
     global_socket_list =malloc(sizeof(SOCKET_LIST));
     globalRSSI = malloc(sizeof(u_int8_t));
+    global_container = malloc(sizeof(HFDP));
+    global_container->data = malloc(SINGLE_MAX_HFDP);
 
     initTransmission("udp_config.txt", "mac_list.txt", global_socket_list, global_mac_list);
 
@@ -96,13 +99,11 @@ void callback(u_int8_t *user, const struct pcap_pkthdr *h, const u_int8_t *bytes
         if(bytes[PATTERN_OFFSET + i] != global_mac_list->macs[global_mac_list->device_id][i]) return;
     }
     
-    HFDP *container = malloc(sizeof(HFDP));
-    readHFDP((u_int8_t*)bytes,container);
+    readHFDP((u_int8_t*)bytes, global_container);
 
-    
     //here goes func from rxtx
-    sendAirToLocal(global_socket_list, global_mac_list, container, global_device);
-     
+    sendAirToLocal(global_socket_list, global_mac_list, global_container, global_device);
+
     /*
     printf("SIZE OF PACKET: %i\n",h->len);
     printf("packet ID: %i\n",container->id);
@@ -113,8 +114,6 @@ void callback(u_int8_t *user, const struct pcap_pkthdr *h, const u_int8_t *bytes
     printf("\n\n");
     */
 
-    free(container->data);
-    free(container);
 }
 
 int printDevices(char *error_buffer){

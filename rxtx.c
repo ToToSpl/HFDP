@@ -228,7 +228,6 @@ void sendAirToLocal(SOCKET_LIST* socket_list, MAC_LIST* mac_list, HFDP* phfdp, p
         //thats all in this case
         return;
     }
-
     //if no resend, packet should be send to udp
     SOCKET_INFO* sockptr = socket_list->sockets[phfdp->id];
     
@@ -237,10 +236,10 @@ void sendAirToLocal(SOCKET_LIST* socket_list, MAC_LIST* mac_list, HFDP* phfdp, p
         if(sockptr->rxFrac == NULL){
             //this is the beginning of the packet
             //setting max size of the buff
-            sockptr->udp->buffer = malloc(sockptr->buffer);
+            //sockptr->udp->buffer = malloc(sockptr->buffer);
             sockptr->rxFrac = sockptr->udp->buffer;
         }
-
+        
         //putting to buffer
         memcpy(sockptr->rxFrac, phfdp->data, phfdp->size);
         sockptr->rxFrac += phfdp->size;
@@ -253,16 +252,15 @@ void sendAirToLocal(SOCKET_LIST* socket_list, MAC_LIST* mac_list, HFDP* phfdp, p
                 printf("%X ",sockptr->udp->buffer[i]);
             printf("\n\n");
             #endif
-
+            
             udp_send(sockptr->udp, sockptr->rxFrac - sockptr->udp->buffer);
             sockptr->rxFrac = NULL;
         }
     }else{
-
         //if rxFrac is not null that means that we have lost end packet part
         if(sockptr->rxFrac != NULL){
             //LOST PACKET SOMETHING HAS TO BE TOLD IN THE FUTURE!!
-            free(sockptr->udp->buffer);
+            
             sockptr->rxFrac = NULL;
         }
 
