@@ -82,12 +82,12 @@ int main(int argc, char **argv){
 }
 
 void *localListener(void *intI){
-    int *id = (int *) intI;
-    printf("Created thread with ID: %d\n",*id);
+    int id = *((int *)intI);
+    printf("Created thread with ID: %d\n", id);
     while (1){
-        sendLocalToAir(global_socket_list, global_mac_list, *id, global_device, globalRSSI);
+        sendLocalToAir(global_socket_list, global_mac_list, id, global_device, globalRSSI);
     }
-    
+    return NULL;
 }
 
 void callback(u_int8_t *user, const struct pcap_pkthdr *h, const u_int8_t *bytes){
@@ -98,7 +98,7 @@ void callback(u_int8_t *user, const struct pcap_pkthdr *h, const u_int8_t *bytes
     for(int i = 0; i < MAC_SIZE; i++){
         if(bytes[PATTERN_OFFSET + i] != global_mac_list->macs[global_mac_list->device_id][i]) return;
     }
-    
+
     readHFDP((u_int8_t*)bytes, global_container);
 
     //here goes func from rxtx
@@ -106,14 +106,14 @@ void callback(u_int8_t *user, const struct pcap_pkthdr *h, const u_int8_t *bytes
 
     /*
     printf("SIZE OF PACKET: %i\n",h->len);
-    printf("packet ID: %i\n",container->id);
-    printf("packet FLAGS: %i\n",container->flags);
-    printf("packet RSSI: %i\n",container->rssi);
-    printf("packet SIZE: %i\n",container->size);
-    for(int i = 0; i < container->size; i++) printf("%X ",container->data[i]);
+    printf("packet ID: %i\n",global_container->id);
+    printf("packet FLAGS: %i\n",global_container->flags);
+    printf("packet RSSI: %i\n",global_container->rssi);
+    printf("packet SIZE: %i\n",global_container->size);
+    for(int i = 0; i < global_container->size; i++) printf("%X ",global_container->data[i]);
     printf("\n\n");
     */
-
+    
 }
 
 int printDevices(char *error_buffer){

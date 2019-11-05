@@ -7,6 +7,7 @@
 #include "HFDP.h"
 #include <pcap.h>
 
+#include <pthread.h>
 /*
  * MAIN FUNCTIONS RESPONSIBLE FOR TRANSMITING AND RECIEVING 
  * 

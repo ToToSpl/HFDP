@@ -59,7 +59,7 @@ void udp_listener(udp_socket* udp_info) {
 			0, ( struct sockaddr *) &udp_info->deviceAddr, 
 			&len);
 	}
-	udp_info->last_packet_size = n;
+	udp_info->last_packet_size = (u_int32_t)n;
 }
 
 void udp_send(udp_socket* udp_info, int lenght){

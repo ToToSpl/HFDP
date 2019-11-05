@@ -29,8 +29,6 @@ void initTransmission(char* udp_file, char* mac_file, SOCKET_LIST* socket_list, 
         udp_socket *ptr = malloc(sizeof(udp_socket));
 
         ptr->buffer_size = socket_list->sockets[i]->buffer;
-        ptr->buffer = malloc(ptr->buffer_size);
-
         ptr->port = socket_list->sockets[i]->socket;
         
         if(udp_init(ptr, socket_list->sockets[i]->servOrClient) < 0){
@@ -99,7 +97,7 @@ void sendLocalToAir(SOCKET_LIST* socket_list, MAC_LIST* mac_list, int socketID, 
     //pointer for buffer that goes to pcap
     packet *finalPacket = malloc(sizeof(packet));
     hfdp_struct->data = malloc(MAX_SINGLE_PACKET_SIZE);
-    int send_num = 0;
+    u_int32_t send_num = 0;
 
     //If udp packet is bigger than max hfdp packet size we have to send it in parts
     if(sock_ptr->udp->last_packet_size > MAX_SINGLE_PACKET_SIZE){
@@ -154,7 +152,7 @@ void sendLocalToAir(SOCKET_LIST* socket_list, MAC_LIST* mac_list, int socketID, 
     
     //NOW WE HAVE TO CLEAN ALLOCATED MEMORY
     //REMEMBER ABOUT BUFFERS INSIDE STRUCTS
-
+    
     //cleaning finalPacket
     free(finalPacket->buff); free(finalPacket);
     //cleaning hfdp_struct
@@ -168,7 +166,7 @@ void sendAirToLocal(SOCKET_LIST* socket_list, MAC_LIST* mac_list, HFDP* phfdp, p
     //first let us see if the package should be resend
     if(phfdp->flags & RESEND){
         //package should be resend
-
+        printf("packet resend\n");
         //making local header for safety
         u_int8_t* local_u8aIeeeHeader_beacon = malloc(sizeof(u8aIeeeHeader_beacon));
         memcpy(local_u8aIeeeHeader_beacon, u8aIeeeHeader_beacon, sizeof(u8aIeeeHeader_beacon));
@@ -230,7 +228,7 @@ void sendAirToLocal(SOCKET_LIST* socket_list, MAC_LIST* mac_list, HFDP* phfdp, p
     }
     //if no resend, packet should be send to udp
     SOCKET_INFO* sockptr = socket_list->sockets[phfdp->id];
-    
+
     //logic for manipulating fragmented packets
     if(phfdp->flags & FRACTURED_PACKET){
         if(sockptr->rxFrac == NULL){
@@ -239,11 +237,11 @@ void sendAirToLocal(SOCKET_LIST* socket_list, MAC_LIST* mac_list, HFDP* phfdp, p
             //sockptr->udp->buffer = malloc(sockptr->buffer);
             sockptr->rxFrac = sockptr->udp->buffer;
         }
-        
+        if(sockptr->rxFrac - sockptr->udp->buffer > sockptr->buffer) printf("too big rxtx!\n");
         //putting to buffer
         memcpy(sockptr->rxFrac, phfdp->data, phfdp->size);
         sockptr->rxFrac += phfdp->size;
-
+        
         if(phfdp->flags & PACKET_END){
             //thats the last packet we can send udp and close buffer
 
@@ -254,16 +252,18 @@ void sendAirToLocal(SOCKET_LIST* socket_list, MAC_LIST* mac_list, HFDP* phfdp, p
             #endif
             
             udp_send(sockptr->udp, sockptr->rxFrac - sockptr->udp->buffer);
+
             sockptr->rxFrac = NULL;
         }
     }else{
+        
         //if rxFrac is not null that means that we have lost end packet part
         if(sockptr->rxFrac != NULL){
             //LOST PACKET SOMETHING HAS TO BE TOLD IN THE FUTURE!!
-            
+            printf("Lost packet!\n");
             sockptr->rxFrac = NULL;
         }
-
+        printf("sockfd: %d\n", sockptr->udp->sockfd);
         memcpy(sockptr->udp->buffer, phfdp->data, phfdp->size);
         udp_send(sockptr->udp, phfdp->size);
 
