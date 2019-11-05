@@ -134,7 +134,7 @@ void sendLocalToAir(SOCKET_LIST* socket_list, MAC_LIST* mac_list, int socketID, 
         send_num += MAX_SINGLE_PACKET_SIZE;
     }
 
-    //now setting that this is the last package or if its normal
+    //now setting that this is the last package, or if its normal
     if(hfdp_struct->flags & FRACTURED_PACKET) hfdp_struct->flags |= PACKET_END;
     hfdp_struct->size = sock_ptr->udp->last_packet_size - send_num;
     //copying data to hfdp struct
@@ -237,11 +237,19 @@ void sendAirToLocal(SOCKET_LIST* socket_list, MAC_LIST* mac_list, HFDP* phfdp, p
             //sockptr->udp->buffer = malloc(sockptr->buffer);
             sockptr->rxFrac = sockptr->udp->buffer;
         }
-        if(sockptr->rxFrac - sockptr->udp->buffer > sockptr->buffer) printf("too big rxtx!\n");
+        
+        //safety system when we've lost PACKET_END package and next one is fractured
+        if(sockptr->rxFrac + phfdp->size - sockptr->udp->buffer > sockptr->buffer){
+            udp_send(sockptr->udp, sockptr->buffer);
+            sockptr->rxFrac = NULL;  
+            return;
+        }
+
         //putting to buffer
         memcpy(sockptr->rxFrac, phfdp->data, phfdp->size);
         sockptr->rxFrac += phfdp->size;
-        
+
+
         if(phfdp->flags & PACKET_END){
             //thats the last packet we can send udp and close buffer
 
@@ -263,7 +271,7 @@ void sendAirToLocal(SOCKET_LIST* socket_list, MAC_LIST* mac_list, HFDP* phfdp, p
             printf("Lost packet!\n");
             sockptr->rxFrac = NULL;
         }
-        printf("sockfd: %d\n", sockptr->udp->sockfd);
+
         memcpy(sockptr->udp->buffer, phfdp->data, phfdp->size);
         udp_send(sockptr->udp, phfdp->size);
 
