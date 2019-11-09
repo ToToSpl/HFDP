@@ -1,4 +1,4 @@
-#include "HFDP.h"
+#include "../include/HFDP.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,7 +10,7 @@ void readHFDP(u_int8_t *buffer, HFDP* container){
     container->flags = buffer[HFDP_START_PLACE + FLAGS_OFFSET];
     container->rssi = buffer[HFDP_START_PLACE + RSSI_OFFSET];
 
-    if(container->flags & RESEND != 0x00){
+    if((container->flags & RESEND) != 0x00){
         container->reMAC = buffer + HFDP_START_PLACE + REMAC_OFFSET;
     }else{
         container->reMAC = NULL;

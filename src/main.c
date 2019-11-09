@@ -7,9 +7,9 @@
 
 #include <pthread.h>
 
-#include "HFDP.h"
-#include "file_interpreter.h"
-#include "rxtx.h"
+#include "../include/HFDP.h"
+#include "../include/file_interpreter.h"
+#include "../include/rxtx.h"
 
 #define CUT_RADIOTAP_SIZE 18
 //because during sendig packet is cut of timestamp and something more we cant just add size of radiotap and offset
@@ -18,7 +18,6 @@
 MAC_LIST *global_mac_list;
 SOCKET_LIST *global_socket_list;
 pcap_t *global_device;
-u_int8_t* globalRSSI;
 HFDP* global_container;
 
 int printDevices(char *error_buffer);
@@ -52,7 +51,6 @@ int main(int argc, char **argv){
 
     global_mac_list = malloc(sizeof(MAC_LIST));
     global_socket_list =malloc(sizeof(SOCKET_LIST));
-    globalRSSI = malloc(sizeof(u_int8_t));
     global_container = malloc(sizeof(HFDP));
     global_container->data = malloc(SINGLE_MAX_HFDP);
 
@@ -85,7 +83,7 @@ void *localListener(void *intI){
     int id = *((int *)intI);
     printf("Created thread with ID: %d\n", id);
     while (1){
-        sendLocalToAir(global_socket_list, global_mac_list, id, global_device, globalRSSI);
+        sendLocalToAir(global_socket_list, global_mac_list, id, global_device);
     }
     return NULL;
 }

@@ -10,7 +10,8 @@
 			"string.h": "c",
 			"stdlib.h": "c",
 			"file_interpreter.h": "c",
-			"stdio.h": "c"
+			"stdio.h": "c",
+			"hfdp.h": "c"
 		}
 	}
 }

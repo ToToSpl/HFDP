@@ -1,11 +1,11 @@
-#include "file_interpreter.h"
+#include "../include/file_interpreter.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
-#include "HFDP.h"
-#include "udp_sockets.h"
+#include "../include/HFDP.h"
+#include "../include/udp_sockets.h"
 
 void generate_headers(char *file_name, SOCKET_LIST* socket_list){
     
@@ -32,7 +32,7 @@ void generate_headers(char *file_name, SOCKET_LIST* socket_list){
 
         #pragma GCC diagnostic push
         #pragma GCC diagnostic ignored "-Wformat"
-        sscanf(line, "%d %s %x %x %x %x %x %x %s %d %s",
+        sscanf(line, "%d %s %x %x %x %x %x %x %s %d %s %d",
             &socket_list->sockets[i]->socket,
              socket_list->sockets[i]->fec,
             &socket_list->sockets[i]->mac[0],
@@ -43,7 +43,8 @@ void generate_headers(char *file_name, SOCKET_LIST* socket_list){
             &socket_list->sockets[i]->mac[5], 
              socket_list->sockets[i]->direction, 
             &socket_list->sockets[i]->buffer,
-             socket_list->sockets[i]->servOrClient);
+             socket_list->sockets[i]->servOrClient,
+            &socket_list->sockets[i]->sendAmount);
         #pragma GCC diagnostic pop
     }
 }

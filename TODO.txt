@@ -1,4 +1,0 @@
-limit size of the packet sending thru air 
-possibly by adding flags which indicates that more packets will come
-
-python script to test if this works will be necessary

@@ -1,4 +1,4 @@
-#include "rxtx.h"
+#include "../include/rxtx.h"
 
 #include <sys/types.h>
 #include <stdio.h>
@@ -7,9 +7,9 @@
 
 #include <pcap.h>
 
-#include "file_interpreter.h"
-#include "HFDP.h"
-#include "udp_sockets.h"
+#include "../include/file_interpreter.h"
+#include "../include/HFDP.h"
+#include "../include/udp_sockets.h"
 
 //#define DEBUGTX
 //#define DEBUGRX
@@ -39,10 +39,12 @@ void initTransmission(char* udp_file, char* mac_file, SOCKET_LIST* socket_list, 
 
         socket_list->sockets[i]->rxFrac = NULL;
         socket_list->sockets[i]->udp = ptr;
+        socket_list->sockets[i]->rssiRX = 0;
+        socket_list->sockets[i]->rssiTX = 0;
     }
 }
 
-void sendLocalToAir(SOCKET_LIST* socket_list, MAC_LIST* mac_list, int socketID, pcap_t *device, u_int8_t* globalRSSI){
+void sendLocalToAir(SOCKET_LIST* socket_list, MAC_LIST* mac_list, int socketID, pcap_t *device){
 
     SOCKET_INFO *sock_ptr = socket_list->sockets[socketID];
 
@@ -57,7 +59,6 @@ void sendLocalToAir(SOCKET_LIST* socket_list, MAC_LIST* mac_list, int socketID, 
     //now let us create a HFDP struct and populate it with known info
     HFDP* hfdp_struct = malloc(sizeof(HFDP));
     hfdp_struct->id = socketID;
-    hfdp_struct->rssi = ++*globalRSSI;
     hfdp_struct->size = sock_ptr->udp->last_packet_size;
     hfdp_struct->reMAC = malloc(MAC_SIZE);
     hfdp_struct->flags = 0x00;
@@ -111,6 +112,7 @@ void sendLocalToAir(SOCKET_LIST* socket_list, MAC_LIST* mac_list, int socketID, 
         hfdp_struct->flags |= FRACTURED_PACKET;
         //copying data to hfdp struct
         memcpy(hfdp_struct->data, sock_ptr->udp->buffer + send_num, MAX_SINGLE_PACKET_SIZE);
+        hfdp_struct->rssi = ++sock_ptr->rssiTX;
         generatePacket(finalPacket, u8aRadiotapHeader, local_u8aIeeeHeader_beacon, hfdp_struct);
         #ifdef DEBUGTX
         for(int i = 0; i < finalPacket->size; i++){
@@ -120,7 +122,7 @@ void sendLocalToAir(SOCKET_LIST* socket_list, MAC_LIST* mac_list, int socketID, 
         #endif
 
         //sending given packet
-        for(int resend = 0; resend < RESEND_AMOUNT; resend++){
+        for(int resend = 0; resend < sock_ptr->sendAmount; resend++){
 
             int lookup_return_code = pcap_inject(device,finalPacket->buff,finalPacket->size);
             if(lookup_return_code != finalPacket->size){
@@ -139,9 +141,10 @@ void sendLocalToAir(SOCKET_LIST* socket_list, MAC_LIST* mac_list, int socketID, 
     hfdp_struct->size = sock_ptr->udp->last_packet_size - send_num;
     //copying data to hfdp struct
     memcpy(hfdp_struct->data, sock_ptr->udp->buffer + send_num, sock_ptr->udp->last_packet_size - send_num);
+    hfdp_struct->rssi = ++sock_ptr->rssiTX;
     generatePacket(finalPacket, u8aRadiotapHeader, local_u8aIeeeHeader_beacon, hfdp_struct);
     //sending final packet
-    for(int resend = 0; resend < RESEND_AMOUNT; resend++){
+    for(int resend = 0; resend < sock_ptr->sendAmount; resend++){
         int lookup_return_code = pcap_inject(device,finalPacket->buff,finalPacket->size);
         if(lookup_return_code != finalPacket->size){
             printf("Error during sending! size of packet: %i\n",lookup_return_code);
@@ -162,6 +165,12 @@ void sendLocalToAir(SOCKET_LIST* socket_list, MAC_LIST* mac_list, int socketID, 
 }
 
 void sendAirToLocal(SOCKET_LIST* socket_list, MAC_LIST* mac_list, HFDP* phfdp, pcap_t *device){
+
+    SOCKET_INFO* sockptr = socket_list->sockets[phfdp->id];
+
+    //checking if given packet was recieved already
+    if(sockptr->rssiRX == phfdp->rssi) return;
+    else sockptr->rssiRX = phfdp->rssi;
 
     //first let us see if the package should be resend
     if(phfdp->flags & RESEND){
@@ -212,7 +221,7 @@ void sendAirToLocal(SOCKET_LIST* socket_list, MAC_LIST* mac_list, HFDP* phfdp, p
         #endif
 
         //finally sending packet
-        for(int resend = 0; resend < RESEND_AMOUNT; resend++){
+        for(int resend = 0; resend < sockptr->sendAmount; resend++){
             int lookup_return_code = pcap_inject(device,finalPacket->buff,finalPacket->size);
             if(lookup_return_code != finalPacket->size){
                 printf("Error during resending!\n");
@@ -227,7 +236,7 @@ void sendAirToLocal(SOCKET_LIST* socket_list, MAC_LIST* mac_list, HFDP* phfdp, p
         return;
     }
     //if no resend, packet should be send to udp
-    SOCKET_INFO* sockptr = socket_list->sockets[phfdp->id];
+    
 
     //logic for manipulating fragmented packets
     if(phfdp->flags & FRACTURED_PACKET){

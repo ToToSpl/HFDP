@@ -4,8 +4,9 @@
  * Quick info how config files work
  * udp_config file holds the information how each udp port should be set
  * each line of the config is next udp server the ID of each one increase by one and the first has ID 0
- * divided by spaces we have these options: socket FEC/NO_FEC ReMAC INPUT/OUTPUT/BIDIRECTIONAL BUFFER_SIZE CLIENT/SERVER 
+ * divided by spaces we have these options: socket FEC/NO_FEC ReMAC INPUT/OUTPUT/BIDIRECTIONAL BUFFER_SIZE CLIENT/SERVER sendamount
  * ReMAC is a six byte MAC address of the device to which packet should go packet will be resend according to mac list till it reach it source
+ * sendamount is an int which means how mant times single packet should be send
  * 
  * mac_list has list of macs beggining from the first device till last in hiearchy
  * this setup is used to resend packets from the ground station to the target plane via plane in the middle
@@ -28,8 +29,8 @@ typedef struct{
 }MAC_LIST;
 
 typedef struct{
-    int socket, buffer, isCorrupted;
-    u_int8_t *mac, *rxFrac;
+    int socket, buffer, isCorrupted, sendAmount;
+    u_int8_t *mac, *rxFrac, rssiRX, rssiTX;
     char fec[10], direction[10], servOrClient[10];
     udp_socket *udp;
 }SOCKET_INFO;

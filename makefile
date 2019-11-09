@@ -1,2 +1,12 @@
-pcap main.c:
-	gcc -o pcap main.c HFDP.c udp_sockets.c file_interpreter.c rxtx.c -lpcap -lpthread
+
+
+
+LIBRARIES = -lpcap -lpthread
+INCLUDEDIR = -I ./include
+
+EXE = pcap
+
+all:
+	gcc $(LIBRARIES) $(LIBDIR) $(INCLUDEDIR) src/*.c -o $(EXE)
+clean:
+	-rm $(EXE)
