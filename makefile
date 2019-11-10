@@ -7,6 +7,6 @@ INCLUDEDIR = -I ./include
 EXE = pcap
 
 all:
-	gcc $(LIBRARIES) $(LIBDIR) $(INCLUDEDIR) src/*.c -o $(EXE)
+	gcc src/*.c -o $(EXE) $(LIBRARIES) $(INLUDEDIR)
 clean:
 	-rm $(EXE)
