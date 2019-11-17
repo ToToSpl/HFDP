@@ -55,11 +55,18 @@ A list of devices will pop-up, find the name of the module you want to use and t
 ```sh
 sudo ifconfig <module_name> down
 sudo iwconfig <module_name> mode monitor
-sudo iwconfig <module_name> channel <1-13 channel you want to use>
 sudo ifconfig <module_name> up
+sudo iwconfig <module_name> channel <1-13 channel you want to use>
 ```
 
-Finally go to your copy of this repository type make and run pcap!
+Finally go to your copy of this repository type:
+
+```sh
+make all
+sudo ./hfdp <module_name>
+```
+
+You have to launch program in the same directory where you have udp_config and mac_list, otherwise you will get seg vault.
 
 
 
