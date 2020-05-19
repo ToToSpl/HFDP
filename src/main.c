@@ -59,12 +59,13 @@ int main(int argc, char **argv){
     char szProgram[512];
     char* localMac = global_mac_list->macs[global_mac_list->device_id];
     struct bpf_program bpfprogram;
-    sprintf(szProgram, "wlan addr1 %.2x:%.2x:%.2x:%.2x:%.2x:%.2x and greater &i",
-            localMac[0], localMac[1], localMac[2], localMac[3], localMac[4], localMac[5],
-            CUT_RADIOTAP_SIZE + IEEE_SIZE);
+    sprintf(szProgram, "wlan addr3 %.2x:%.2x:%.2x:%.2x:%.2x:%.2x and greater %i",
+            localMac[0] & 0xFF, localMac[1] & 0xff, localMac[2] & 0xFF,
+            localMac[3] & 0xFF, localMac[4] & 0xFF, localMac[5] & 0xFF,
+            (CUT_RADIOTAP_SIZE + IEEE_SIZE));
     
     if(pcap_compile(global_device, &bpfprogram, szProgram, 1, 0) == -1){
-        printf("error in compiling pcap scripr!\n");
+        printf("error in compiling pcap script!\n");
         printf("%s\n", szProgram);
         return -1;
     }
@@ -109,10 +110,8 @@ void *localListener(void *intI){
 }
 
 void callback(u_int8_t *user, const struct pcap_pkthdr *h, const u_int8_t *bytes){
-    
     readHFDP((u_int8_t*)bytes, global_container);
     sendAirToLocal(global_socket_list, global_mac_list, global_container, global_device);
-    
 }
 
 int printDevices(char *error_buffer){
